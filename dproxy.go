@@ -73,21 +73,35 @@ func listUpstreams() {
 			if filepath.Ext(file.Name()) == config.Cryo.UpstreamExtension {
 				tmpfile := fmt.Sprintf("%s%s", config.Cryo.UpstreamLocation, file.Name())
 				f, _ := ioutil.ReadFile(tmpfile)
+				var entryName string
+
 				lines := strings.Split(string(f), "\n")
 				for i := range lines {
-					field, value := parseString(lines[i])
-					fmt.Printf("%s: %s\n", field, value)
+					err, field, value := parseString(lines[i])
+					if err == nil {
+						if field == "server" {
+							entryName = value
+						} else {
+
+							// THROW THIS SHIT IN REDIS
+							fmt.Printf("upstream:%s:%s :: %s\n", entryName, field, value)
+						}
+					}
 				}
 			}
 		}
 	}
 }
 
-func parseString(line string) (string, string) {
+func parseString(line string) (error, string, string) {
 	var s []string
 	var tmpStr string
 	var field string
 	chr := "[ ]"
+
+	if line == "" || strings.Contains(line, "#") {
+		return fmt.Errorf("cannot use empty string"), "", ""
+	}
 	line = strings.Replace(line, "\t", "", -1)
 
 	// check if = exists
@@ -97,7 +111,7 @@ func parseString(line string) (string, string) {
 		field = s[0]
 	} else {
 		tmpStr = line
-		field = "name"
+		field = "server"
 	}
 
 	value := strings.Map(func(r rune) rune {
@@ -106,5 +120,5 @@ func parseString(line string) (string, string) {
 		}
 		return -1
 	}, tmpStr)
-	return field, value
+	return nil, field, value
 }

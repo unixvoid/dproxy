@@ -1,0 +1,5 @@
+[cryo]
+	loglevel		= "debug"
+	port			= 8053
+	upstreamlocation	= "upstream/"
+	upstreamextension	= ".prox"

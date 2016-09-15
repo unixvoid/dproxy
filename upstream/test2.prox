@@ -1,0 +1,4 @@
+[test2]
+	address		= 192.168.1.2
+	port		= 53
+	alias		= [test2]

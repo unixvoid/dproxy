@@ -1,8 +1,11 @@
-#this is a comment line
 [unixvoid.com]
 	address		= 8.8.8.8
 	port		= 53
 
-[google.com]
+[*.google.com]
 	address		= 192.168.1.9
 	port		= 5553
+
+#[*.google.com]
+#	address		= 192.168.1.9
+#	port		= 5553

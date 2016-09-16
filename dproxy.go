@@ -226,7 +226,6 @@ func checkDomain(redisClient *redis.Client, domainName string) (error, string) {
 	// if there are more than 2 it is a subdomain. Check for root domain's wildcard
 	// before we search for the domain. ie mail.google.com. : look for *.google.com first
 	subd := strings.Count(domainName, ".")
-	glogger.Debug.Println(subd, ".'s exist in domain")
 	if subd > 2 {
 		tmpSplit := strings.Split(domainName, ".")
 
@@ -234,7 +233,7 @@ func checkDomain(redisClient *redis.Client, domainName string) (error, string) {
 		address, err = redisClient.Get(fmt.Sprintf("upstream:%s:address", wildcardDomain)).Result()
 		if err == nil {
 			port, _ = redisClient.Get(fmt.Sprintf("upstream:%s:port", wildcardDomain)).Result()
-			glogger.Debug.Printf("returning wildcard '%s:%s' to client\n", address, port)
+			//glogger.Debug.Printf("returning wildcard '%s:%s' to client\n", address, port)
 			return nil, fmt.Sprintf("%s:%s", address, port)
 		}
 	}

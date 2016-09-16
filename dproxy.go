@@ -20,6 +20,8 @@ type Config struct {
 		Port              int
 		UpstreamLocation  string
 		UpstreamExtension string
+		UseMasterUpstream bool
+		MasterUpstream    string
 	}
 	Redis struct {
 		Host     string
@@ -97,14 +99,28 @@ func initRedisConnection() (*redis.Client, error) {
 
 func resolve(w dns.ResponseWriter, req *dns.Msg, redisClient *redis.Client) {
 	hostname := req.Question[0].Name
-	glogger.Cluster.Println(hostname)
+	//glogger.Cluster.Println(hostname)
 	//domain := parseHostname(hostname)
+
+	// check the domain to see if it is in redis
+	err, upstream := checkDomain(redisClient, hostname)
+	if err != nil {
+		if config.Cryo.UseMasterUpstream {
+			upstream = config.Cryo.MasterUpstream
+		} else {
+			glogger.Debug.Println(err)
+			dns.HandleFailed(w, req)
+			return
+		}
+	}
+	glogger.Debug.Printf("routing request %s to %s\n", hostname, upstream)
+
 	transport := "udp"
 	if _, ok := w.RemoteAddr().(*net.TCPAddr); ok {
 		transport = "tcp"
 	}
 	c := &dns.Client{Net: transport}
-	resp, _, err := c.Exchange(req, "192.168.1.9:5553")
+	resp, _, err := c.Exchange(req, upstream)
 	if err != nil {
 		glogger.Debug.Println(err)
 		dns.HandleFailed(w, req)
@@ -145,9 +161,12 @@ func parseUpstreams(redisClient *redis.Client) {
 					err, field, value := parseString(lines[i])
 					if err == nil {
 						if field == "server" {
+							// fully qualify the domain name if it is not already:
+							if string(value[len(value)-1]) != "." {
+								value = fmt.Sprintf("%s.", value)
+							}
 							entryName = value
 						} else {
-
 							// add entries to redis
 							redisEntry := fmt.Sprintf("upstream:%s:%s", entryName, field)
 							glogger.Debug.Printf("setting '%s' to '%s' in redis", redisEntry, value)
@@ -190,4 +209,19 @@ func parseString(line string) (error, string, string) {
 		return -1
 	}, tmpStr)
 	return nil, field, value
+}
+
+func checkDomain(redisClient *redis.Client, domainName string) (error, string) {
+	// fully qualify the domain name if it is not already:
+	if string(domainName[len(domainName)-1]) != "." {
+		domainName = fmt.Sprintf("%s.", domainName)
+	}
+	address, err := redisClient.Get(fmt.Sprintf("upstream:%s:address", domainName)).Result()
+	port, err := redisClient.Get(fmt.Sprintf("upstream:%s:port", domainName)).Result()
+	if err != nil {
+		glogger.Error.Println(err)
+		return fmt.Errorf("data not found in db"), ""
+	}
+
+	return nil, fmt.Sprintf("%s:%s", address, port)
 }

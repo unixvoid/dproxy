@@ -3,6 +3,9 @@
 	port			= 8053
 	upstreamlocation	= "upstream/"
 	upstreamextension	= ".prox"
+	usemasterupstream	= true
+	masterupstream		= "8.8.8.8:53"
+
 [redis]
 	host			= "localhost:6379"
 	password		= ""

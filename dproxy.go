@@ -3,12 +3,15 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/miekg/dns"
 	"github.com/unixvoid/glogger"
 	"gopkg.in/gcfg.v1"
+	"gopkg.in/redis.v3"
 )
 
 type Config struct {
@@ -17,6 +20,10 @@ type Config struct {
 		Port              int
 		UpstreamLocation  string
 		UpstreamExtension string
+	}
+	Redis struct {
+		Host     string
+		Password string
 	}
 }
 
@@ -27,7 +34,33 @@ var (
 func main() {
 	readConf()
 	initLogger(config.Cryo.Loglevel)
-	listUpstreams()
+
+	redisClient, redisErr := initRedisConnection()
+	if redisErr != nil {
+		glogger.Error.Println("redis connection cannot be made.")
+		glogger.Error.Println("dproxy will continue to function in passthrough mode only")
+	} else {
+		glogger.Debug.Println("connection to redis succeeded.")
+	}
+
+	// read in confs
+	parseUpstreams(redisClient)
+
+	// format the string to be :port
+	port := fmt.Sprint(":", config.Cryo.Port)
+
+	udpServer := &dns.Server{Addr: port, Net: "udp"}
+	tcpServer := &dns.Server{Addr: port, Net: "tcp"}
+	glogger.Info.Println("started server on", config.Cryo.Port)
+	dns.HandleFunc(".", func(w dns.ResponseWriter, req *dns.Msg) {
+		go resolve(w, req, redisClient)
+	})
+
+	go func() {
+		glogger.Error.Println(udpServer.ListenAndServe())
+	}()
+	glogger.Error.Println(tcpServer.ListenAndServe())
+
 }
 
 func readConf() {
@@ -50,9 +83,39 @@ func initLogger(logLevel string) {
 		glogger.LogInit(ioutil.Discard, ioutil.Discard, ioutil.Discard, os.Stderr)
 	}
 }
+func initRedisConnection() (*redis.Client, error) {
+	// init redis connection
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     config.Redis.Host,
+		Password: config.Redis.Password,
+		DB:       0,
+	})
 
-func listUpstreams() {
-	//dirname := "." + string(filepath.Separator)
+	_, redisErr := redisClient.Ping().Result()
+	return redisClient, redisErr
+}
+
+func resolve(w dns.ResponseWriter, req *dns.Msg, redisClient *redis.Client) {
+	hostname := req.Question[0].Name
+	glogger.Cluster.Println(hostname)
+	//domain := parseHostname(hostname)
+	transport := "udp"
+	if _, ok := w.RemoteAddr().(*net.TCPAddr); ok {
+		transport = "tcp"
+	}
+	c := &dns.Client{Net: transport}
+	resp, _, err := c.Exchange(req, "192.168.1.9:5553")
+	if err != nil {
+		glogger.Debug.Println(err)
+		dns.HandleFailed(w, req)
+		return
+	}
+
+	w.WriteMsg(resp)
+	return
+}
+
+func parseUpstreams(redisClient *redis.Client) {
 	dirname := fmt.Sprintf("%s", config.Cryo.UpstreamLocation)
 
 	d, err := os.Open(dirname)
@@ -68,6 +131,8 @@ func listUpstreams() {
 		os.Exit(1)
 	}
 
+	// as bad as this looks, its only O(n)
+	// open file, parse line by line
 	for _, file := range files {
 		if file.Mode().IsRegular() {
 			if filepath.Ext(file.Name()) == config.Cryo.UpstreamExtension {
@@ -83,8 +148,10 @@ func listUpstreams() {
 							entryName = value
 						} else {
 
-							// THROW THIS SHIT IN REDIS
-							fmt.Printf("upstream:%s:%s :: %s\n", entryName, field, value)
+							// add entries to redis
+							redisEntry := fmt.Sprintf("upstream:%s:%s", entryName, field)
+							glogger.Debug.Printf("setting '%s' to '%s' in redis", redisEntry, value)
+							redisClient.Set(redisEntry, value, 0).Err()
 						}
 					}
 				}
@@ -94,9 +161,11 @@ func listUpstreams() {
 }
 
 func parseString(line string) (error, string, string) {
-	var s []string
-	var tmpStr string
-	var field string
+	var (
+		s      []string
+		tmpStr string
+		field  string
+	)
 	chr := "[ ]"
 
 	if line == "" || strings.Contains(line, "#") {

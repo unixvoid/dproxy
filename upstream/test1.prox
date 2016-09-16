@@ -2,3 +2,7 @@
 [test1]
 	address		= 192.168.1.9
 	port		= 53
+
+[google.com]
+	address		= 192.168.1.9
+	port		= 5553

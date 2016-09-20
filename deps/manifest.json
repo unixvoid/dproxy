@@ -1,0 +1,56 @@
+{
+    "acKind": "ImageManifest",
+    "acVersion": "0.7.1",
+    "name": "unixvoid.com/dproxy",
+    "labels": [
+        {
+            "name": "version",
+            "value": "latest"
+        },
+        {
+            "name": "arch",
+            "value": "amd64"
+        },
+        {
+            "name": "os",
+            "value": "linux"
+        }
+    ],
+    "app": {
+        "user": "root",
+        "group": "root",
+        "exec": [
+            "/run.sh"
+        ],
+        "ports": [
+        {
+            "name": "dns",
+            "protocol": "tcp",
+            "port": 53
+        }
+        ],
+        "mountPoints": [
+        {
+            "name": "config",
+            "path": "/config.gcfg",
+            "readOnly": true
+        },
+        {
+            "name": "upstream",
+            "path": "/upstream/",
+            "readOnly": true
+        },
+        {
+            "name": "redis",
+            "path": "/redisbackup/",
+            "readOnly": false
+        }
+        ]
+    },
+    "annotations": [
+        {
+        "name": "authors",
+        "value": "Matthew Faltys <mfaltys@gmail.com>"
+    }
+    ]
+}

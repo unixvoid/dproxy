@@ -14,7 +14,7 @@ run:
 docker:
 	mkdir stage.tmp/
 	$(MAKE) stat
-	mv dproxy stage.tmp/
+	cp bin/dproxy* stage.tmp/dproxy
 	cp deps/Dockerfile stage.tmp/
 	cp deps/rootfs.tar.gz stage.tmp/
 	cp deps/run.sh stage.tmp/
@@ -32,9 +32,30 @@ dockerrun:
 		$(IMAGE_NAME)
 	$(DOCKER_PREFIX) docker logs -f dproxy
 
+aci:
+	$(MAKE) stat
+	mkdir -p stage.tmp/dproxy-layout/rootfs/
+	tar -zxf deps/rootfs.tar.gz -C stage.tmp/dproxy-layout/rootfs/
+	cp bin/dproxy* stage.tmp/dproxy-layout/rootfs/dproxy
+	chmod +x deps/run.sh
+	cp deps/run.sh stage.tmp/dproxy-layout/rootfs/
+	sed -i "s/\$$GIT_HASH/$(GIT_HASH)/g" stage.tmp/dproxy-layout/rootfs/run.sh
+	cp config.gcfg stage.tmp/dproxy-layout/rootfs/
+	cp deps/manifest.json stage.tmp/dproxy-layout/manifest
+	cd stage.tmp/ && \
+		actool build dproxy-layout dproxy.aci && \
+		mv dproxy.aci ../
+	@echo "dproxy.aci built"
+
+testaci:
+	deps/testrkt.sh
+
 clean:
 	rm -f dproxy
+	rm -f dproxy.aci
+	rm -rf bin/
 	rm -rf stage.tmp/
 
 stat:
-	$(CGOR) $(GOC) $(GOFLAGS) dproxy.go
+	mkdir -p bin/
+	$(CGOR) $(GOC) $(GOFLAGS) -o bin/dproxy-$(GIT_HASH)-linux-amd64 dproxy.go

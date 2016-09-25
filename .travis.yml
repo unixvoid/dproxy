@@ -1,0 +1,30 @@
+language: go
+
+go:
+  - 1.5.4
+  - 1.6
+
+services:
+  - docker
+
+install:
+  - make dependencies
+
+script:
+  - make stat
+
+after_success:
+  - make clean docker
+  - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  - docker tag unixvoid/dproxy unixvoid/dproxy:develop
+  - docker push unixvoid/dproxy:develop
+  - curl -i --form sec=$BINDER_SEC --form file=@`ls bin/dproxy*` --form path=dproxy/ https://cryo.unixvoid.com/upload
+  - curl -i --form sec=$BINDER_SEC --form file=@`ls bin/dproxy*` --form filename=dproxy-latest-linux-amd64 --form path=dproxy/ https://cryo.unixvoid.com/upload
+  - curl -d sec=$BINDER_SEC -d key=unixvoid.pub https://cryo.unixvoid.com/getfile --output unixvoid.pub
+  - curl -d sec=$BINDER_SEC -d key=unixvoid.sec https://cryo.unixvoid.com/getfile --output unixvoid.sec
+  - make clean travisaci
+  - mv dproxy.aci dproxy-latest-linux-amd64.aci
+  - cp deps/sign.sh . && chmod +x sign.sh
+  - ./sign.sh $GPG_SEC
+  - curl -i --form sec=$BINDER_SEC --form file=@dproxy-latest-linux-amd64.aci --form path=rkt/dproxy/ https://cryo.unixvoid.com/upload
+  - curl -i --form sec=$BINDER_SEC --form file=@dproxy-latest-linux-amd64.aci.asc --form path=rkt/dproxy/ https://cryo.unixvoid.com/upload

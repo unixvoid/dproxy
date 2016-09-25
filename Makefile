@@ -50,6 +50,23 @@ aci:
 testaci:
 	deps/testrkt.sh
 
+travisaci:
+	wget https://github.com/appc/spec/releases/download/v0.8.7/appc-v0.8.7.tar.gz
+	tar -zxf appc-v0.8.7.tar.gz
+	$(MAKE) stat
+	mkdir -p stage.tmp/dproxy-layout/rootfs/
+	tar -zxf deps/rootfs.tar.gz -C stage.tmp/dproxy-layout/rootfs/
+	cp bin/dproxy* stage.tmp/dproxy-layout/rootfs/dproxy
+	chmod +x deps/run.sh
+	cp deps/run.sh stage.tmp/dproxy-layout/rootfs/
+	sed -i "s/\$$GIT_HASH/$(GIT_HASH)/g" stage.tmp/dproxy-layout/rootfs/run.sh
+	cp config.gcfg stage.tmp/dproxy-layout/rootfs/
+	cp deps/manifest.json stage.tmp/dproxy-layout/manifest
+	cd stage.tmp/ && \
+		actool build dproxy-layout dproxy.aci && \
+		mv dproxy.aci ../
+	@echo "dproxy.aci built"
+
 clean:
 	rm -f dproxy
 	rm -f dproxy.aci

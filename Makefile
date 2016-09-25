@@ -69,7 +69,7 @@ travisaci:
 	cp config.gcfg stage.tmp/dproxy-layout/rootfs/
 	cp deps/manifest.json stage.tmp/dproxy-layout/manifest
 	cd stage.tmp/ && \
-		../appc-v0.8.7/actool build cryodns-layout cryodns.aci && \
+		../appc-v0.8.7/actool build dproxy-layout dproxy.aci && \
 		mv dproxy.aci ../
 	@echo "dproxy.aci built"
 

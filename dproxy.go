@@ -244,8 +244,6 @@ func checkDomain(redisClient *redis.Client, domainName string) (error, string) {
 	glogger.Debug.Printf("checking redis for: upstream:%s:address\n", domainName)
 	address, err = redisClient.Get(fmt.Sprintf("upstream:%s:address", domainName)).Result()
 	port, err = redisClient.Get(fmt.Sprintf("upstream:%s:port", domainName)).Result()
-	glogger.Debug.Println("redis returned addr ", address)
-	glogger.Debug.Println("redis returned port ", port)
 	if err != nil {
 		glogger.Debug.Println("data not found in db")
 		return fmt.Errorf("data not found in db"), ""

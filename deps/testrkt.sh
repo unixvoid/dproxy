@@ -9,7 +9,7 @@ sudo rkt run \
 	--port=dns-tcp:53 \
 	--port=dns-udp:53 \
 	--debug \
-        unixvoid.com/dproxy
+        ./dproxy.aci
 
 #CURRENT_DIR=$(pwd)
 #--port=dns-tcp:8053 \

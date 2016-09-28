@@ -105,7 +105,7 @@ func resolve(w dns.ResponseWriter, req *dns.Msg, redisClient *redis.Client) {
 	// check the domain to see if it is in redis
 	err, upstream := checkDomain(redisClient, hostname)
 	if err != nil {
-		glogger.Debug.Println("response from redis: ", err)
+		//glogger.Debug.Println("response from redis: ", err)
 		if config.Cryo.UseMasterUpstream {
 			upstream = config.Cryo.MasterUpstream
 		} else {
@@ -168,6 +168,8 @@ func parseUpstreams(redisClient *redis.Client) {
 							}
 							entryName = value
 						} else {
+							// make sure 'value' is not space padded
+							value := strings.Replace(value, " ", "", -1)
 							// add entries to redis
 							redisEntry := fmt.Sprintf("upstream:%s:%s", entryName, field)
 							glogger.Debug.Printf("setting '%s' to '%s' in redis", redisEntry, value)

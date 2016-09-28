@@ -1,0 +1,16 @@
+[Unit]
+Description=dproxy
+
+[Service]
+ExecStart=/usr/bin/rkt run \
+	--insecure-options=all \
+        --volume redis,kind=host,source=/cryo/dproxy/redis/ \
+        --volume config,kind=host,source=/cryo/dproxy/config.gcfg \
+        --volume upstream,kind=host,source=/cryo/dproxy/upstream/ \
+	--port=dns-tcp:53 \
+	--port=dns-udp:53 \
+	--debug \
+        unixvoid.com/dproxy
+
+[Install]
+WantedBy=multi-user.target

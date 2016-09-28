@@ -105,6 +105,7 @@ func resolve(w dns.ResponseWriter, req *dns.Msg, redisClient *redis.Client) {
 	// check the domain to see if it is in redis
 	err, upstream := checkDomain(redisClient, hostname)
 	if err != nil {
+		glogger.Debug.Println("response from redis: ", err)
 		if config.Cryo.UseMasterUpstream {
 			upstream = config.Cryo.MasterUpstream
 		} else {

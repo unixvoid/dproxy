@@ -168,10 +168,10 @@ func parseUpstreams(redisClient *redis.Client) {
 							}
 							entryName = value
 						} else {
-							// make sure 'value' is not space padded
-							value := strings.Replace(value, " ", "", -1)
 							// add entries to redis
 							redisEntry := fmt.Sprintf("upstream:%s:%s", entryName, field)
+							// make sure 'redisEntry' is not space padded
+							value := strings.Replace(redisEntry, " ", "", -1)
 							glogger.Debug.Printf("setting '%s' to '%s' in redis", redisEntry, value)
 							redisClient.Set(redisEntry, value, 0).Err()
 						}

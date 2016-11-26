@@ -15,7 +15,11 @@ dependencies:
 	go get gopkg.in/redis.v3
 
 run:
-	go run dproxy.go
+	go run \
+		dproxy/dproxy.go \
+		dproxy/checkdomain.go \
+		dproxy/parseupstream.go \
+		dproxy/resolve.go
 
 docker:
 	mkdir stage.tmp/
@@ -74,11 +78,10 @@ travisaci:
 	@echo "dproxy.aci built"
 
 clean:
-	rm -f dproxy
 	rm -f dproxy.aci
 	rm -rf bin/
 	rm -rf stage.tmp/
 
 stat:
 	mkdir -p bin/
-	$(CGOR) $(GOC) $(GOFLAGS) -o bin/dproxy-$(GIT_HASH)-linux-amd64 dproxy.go
+	$(CGOR) $(GOC) $(GOFLAGS) -o bin/dproxy-$(GIT_HASH)-linux-amd64 dproxy/*.go

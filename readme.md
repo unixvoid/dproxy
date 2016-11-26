@@ -1,9 +1,5 @@
 ### redis structures
-upstream:test1:ip
-upstream:test1:port
-
-### todo
-add upstream wildcard / support more regex expressions
+[![Build Status (Travis)](https://travis-ci.org/unixvoid/dproxy.svg?branch=master)](https://travis-ci.org/unixvoid/dproxy)  
 
 ### rkt cleanup
 to cleanup unused/stored rkt images use:

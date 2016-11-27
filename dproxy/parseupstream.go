@@ -12,7 +12,7 @@ import (
 )
 
 func parseUpstreams(redisClient *redis.Client) {
-	dirname := fmt.Sprintf("%s", config.Cryo.UpstreamLocation)
+	dirname := fmt.Sprintf("%s", config.Dproxy.UpstreamLocation)
 
 	d, err := os.Open(dirname)
 	if err != nil {
@@ -31,8 +31,8 @@ func parseUpstreams(redisClient *redis.Client) {
 	// open file, parse line by line
 	for _, file := range files {
 		if file.Mode().IsRegular() {
-			if filepath.Ext(file.Name()) == config.Cryo.UpstreamExtension {
-				tmpfile := fmt.Sprintf("%s%s", config.Cryo.UpstreamLocation, file.Name())
+			if filepath.Ext(file.Name()) == config.Dproxy.UpstreamExtension {
+				tmpfile := fmt.Sprintf("%s%s", config.Dproxy.UpstreamLocation, file.Name())
 				f, _ := ioutil.ReadFile(tmpfile)
 				var entryName string
 

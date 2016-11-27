@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Cryo struct {
+	Dproxy struct {
 		Loglevel          string
 		Port              int
 		UpstreamLocation  string
@@ -32,7 +32,7 @@ var (
 
 func main() {
 	readConf()
-	initLogger(config.Cryo.Loglevel)
+	initLogger(config.Dproxy.Loglevel)
 
 	redisClient, redisErr := initRedisConnection()
 	if redisErr != nil {
@@ -46,11 +46,11 @@ func main() {
 	parseUpstreams(redisClient)
 
 	// format the string to be :port
-	port := fmt.Sprint(":", config.Cryo.Port)
+	port := fmt.Sprint(":", config.Dproxy.Port)
 
 	udpServer := &dns.Server{Addr: port, Net: "udp"}
 	tcpServer := &dns.Server{Addr: port, Net: "tcp"}
-	glogger.Info.Println("started server on", config.Cryo.Port)
+	glogger.Info.Println("started server on", config.Dproxy.Port)
 	dns.HandleFunc(".", func(w dns.ResponseWriter, req *dns.Msg) {
 		go resolve(w, req, redisClient)
 	})

@@ -1,4 +1,4 @@
-[cryo]
+[dproxy]
 	loglevel		= "debug"
 	port			= 53
 	upstreamlocation	= "upstream/"

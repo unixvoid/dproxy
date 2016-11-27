@@ -17,8 +17,8 @@ func resolve(w dns.ResponseWriter, req *dns.Msg, redisClient *redis.Client) {
 	err, upstream := checkDomain(redisClient, hostname)
 	if err != nil {
 		//glogger.Debug.Println("response from redis: ", err)
-		if config.Cryo.UseMasterUpstream {
-			upstream = config.Cryo.MasterUpstream
+		if config.Dproxy.UseMasterUpstream {
+			upstream = config.Dproxy.MasterUpstream
 		} else {
 			glogger.Debug.Println(err)
 			dns.HandleFailed(w, req)

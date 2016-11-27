@@ -31,17 +31,17 @@ There are 3 main ways to run dproxy:
 The server configuration is pretty straightforward, the following is the default
 configuration that dproxy ships with.
 ```
-[dproxy]						# this section is the start of the server main config.
-	loglevel		= "debug"		# loglevel, this can be one of [debug, cluster, info, error]
-	port			= 53			# port for the DNS server to listen on
-	upstreamlocation	= "upstream/"		# the location for all upstream server configs. (see upstream configuration)
+[dproxy]								# this section is the start of the server main config.
+	loglevel			= "debug"		# loglevel, this can be one of [debug, cluster, info, error]
+	port				= 53			# port for the DNS server to listen on
+	upstreamlocation	= "upstream/"	# the location for all upstream server configs. (see upstream configuration)
 	upstreamextension	= ".prox"		# file extention that dproxy will parse for upstreams
 	usemasterupstream	= true			# unsed right now, we will add in a way to return a non-authoritative DNS response when set to flase
-	masterupstream		= "8.8.8.8:53"		# upstream DNS server to use when entry is not found locally
+	masterupstream		= "8.8.8.8:53"	# upstream DNS server to use when entry is not found locally
 
-[redis]							# this section is the start of the redis configuration
+[redis]									# this section is the start of the redis configuration
 	host			= "localhost:6379"	# ip and port to connect to redis on
-	password		= ""			# password for the redis server (if it has one)
+	password		= ""				# password for the redis server (if it has one)
 ```
 
 ## Upstream Configuration

@@ -13,6 +13,10 @@ func resolve(w dns.ResponseWriter, req *dns.Msg, redisClient *redis.Client) {
 	//glogger.Cluster.Println(hostname)
 	//domain := parseHostname(hostname)
 
+	// ditch the request if its infinitely recursive
+	if hostname == "." {
+		return
+	}
 	// check the domain to see if it is in redis
 	err, upstream := checkDomain(redisClient, hostname)
 	if err != nil {

@@ -24,8 +24,21 @@ func resolve(w dns.ResponseWriter, req *dns.Msg, redisClient *redis.Client) {
 		if config.Dproxy.UseMasterUpstream {
 			upstream = config.Dproxy.MasterUpstream
 		} else {
-			glogger.Debug.Println(err)
-			dns.HandleFailed(w, req)
+			// if we are set not to use upstream, return a RXCODE8
+			glogger.Debug.Println("ipv4 entry not found in records, sending rcode3")
+
+			rr := new(dns.A)
+			rr.Hdr = dns.RR_Header{Name: hostname, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 1}
+			rr.A = net.ParseIP("")
+
+			// craft reply
+			rep := new(dns.Msg)
+			rep.SetReply(req)
+			rep.SetRcode(req, dns.RcodeNameError)
+			rep.Answer = append(rep.Answer, rr)
+
+			// send it
+			w.WriteMsg(rep)
 			return
 		}
 	}
